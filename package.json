@@ -6,14 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ThePossessed/RicardoBot.git"
-  },
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/ThePossessed/RicardoBot/issues"
-  },
-  "homepage": "https://github.com/ThePossessed/RicardoBot#readme"
+  "dependencies": {
+    "discord.js": "^14.7.1"
+  }
 }
