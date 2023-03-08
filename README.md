@@ -18,3 +18,10 @@ Run to test running bot
 node index.js
 ```
 
+## Run with Docker
+I've just created a Dockerfile, which you can now build and run on Docker for better environment.
+
+```
+docker build -t ricardo-bot .
+docker run --rm -it ricardo-bot
+```
