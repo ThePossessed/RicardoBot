@@ -27,4 +27,4 @@ docker run --rm -it ricardo-bot
 ```
 
 ## Resources for Devs:
-![DiscordJs Documentation](https://discordjs.guide/#before-you-begin)
+[DiscordJs Documentation](https://discordjs.guide/#before-you-begin)
