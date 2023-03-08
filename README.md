@@ -25,3 +25,6 @@ I've just created a Dockerfile, which you can now build and run on Docker for be
 docker build -t ricardo-bot .
 docker run --rm -it ricardo-bot
 ```
+
+## Resources for Devs:
+![DiscordJs Documentation](https://discordjs.guide/#before-you-begin)
