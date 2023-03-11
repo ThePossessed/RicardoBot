@@ -9,6 +9,9 @@ const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
+// Log in to Discord with your client's token
+client.login(process.env.DISCORD_TOKEN);
+
 client.commands = new Collection();
 
 const commandsPath = path.join(__dirname, 'commands');
@@ -30,7 +33,10 @@ client.on(Events.InteractionCreate, async interaction => {
 	const command = client.commands.get(interaction.commandName);
 	console.log(command);
 
-	if (!command) return;
+	if (!command) {
+		console.error(`No command matching ${interaction.commandName} was found.`);
+		return;
+	}
 
 	try {
 		await command.execute(interaction);
@@ -46,6 +52,3 @@ client.on(Events.InteractionCreate, async interaction => {
 
 // When the client is ready, run this code (only once)
 // We use 'c' for the event parameter to keep it separate from the already defined 'client'
-
-// Log in to Discord with your client's token
-client.login(process.env.DISCORD_TOKEN);

@@ -1,15 +1,17 @@
 const { Client, SlashCommandBuilder, GatewayIntentBits } = require('discord.js');
-const fetch = require('node-fetch');
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+// Log in to Discord with your client's token
+client.login(process.env.DISCORD_TOKEN);
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('thirsty')
 		.setDescription('Ask Hai Nam to give out some water'),
 	async execute(interaction) {
-        const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-        let user = client.users.fetch('345082365405560834');
+        let user = await client.users.fetch('345082365405560834');
         if (user){
-            await interaction.reply(`${interaction.user.username} is about to die due to lack of water. ${user} please share some`);
+            await interaction.reply(`${interaction.user} is about to die due to lack of water. ${user} please share some`);
         } else {
             await interaction.reply(`No water :(`)
         }
