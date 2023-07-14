@@ -5,15 +5,15 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 client.login(process.env.DISCORD_TOKEN);
 
 module.exports = {
-	data: new SlashCommandBuilder()
-		.setName('thirsty')
-		.setDescription('Ask Hai Nam to give out some water'),
-	async execute(interaction) {
+    data: new SlashCommandBuilder()
+        .setName('thirsty')
+        .setDescription('Ask Hai Nam to give out some water'),
+    async execute(interaction) {
         let user = await client.users.fetch('345082365405560834');
-        if (user){
+        if (user) {
             await interaction.reply(`${interaction.user} is about to die due to lack of water. ${user} please share some`);
         } else {
             await interaction.reply(`No water :(`)
         }
-	},
+    },
 };
