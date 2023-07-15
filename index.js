@@ -41,8 +41,14 @@ client.on(Events.InteractionCreate, async interaction => {
 		return;
 	}
 
+	// FYI: get arguments using: interaction.options._hoistedOptions[0].value
+
 	try {
-		await command.execute(interaction);
+		if (interaction.commandName === "play") {
+			await command.execute(interaction, interaction.options._hoistedOptions[0].value);
+		} else {
+			await command.execute(interaction);
+		}
 	} catch (error) {
 		console.error(error);
 		if (interaction.replied || interaction.deferred) {

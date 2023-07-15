@@ -1,6 +1,6 @@
 const { Client, SlashCommandBuilder, GatewayIntentBits } = require('discord.js');
-const { createAudioPlayer, createAudioResource, joinVoiceChannel } = require('@discordjs/voice');
-const ytdl = require('ytdl-core');
+const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus } = require('@discordjs/voice');
+const ytdl = require('play-dl');
 const fetch = require("node-fetch");
 const isUrl = require("is-url");
 require("dotenv").config();
@@ -9,6 +9,9 @@ require("dotenv").config();
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 // Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN);
+
+const queue = [];
+var curState = "I";
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,10 +22,10 @@ module.exports = {
                 .setDescription('song URL or song name')
                 .setRequired(false)
         ),
-    async execute(interaction) {
+    async execute(interaction, args) {
         // console.log("Channel: ", interaction["channelId"]);
 
-        var url = 'https://www.youtube.com/watch?v=BYnD5Bwm6Gk&ab_channel=PixelNeko';
+        var url = args;
         var title;
         const songName = interaction.options.getString('query');
         const validURL = isUrl(songName);
@@ -35,37 +38,58 @@ module.exports = {
                 .then(response => response.json())
                 .then(data => {
                     videoID = data.items[0].id.videoId;
+                    title = data.items[0].snippet.title;
                 }).then(() => {
-                    url = `http://www.youtube.com/watch?v=${videoID}`;
+                    url = `https://www.youtube.com/watch?v=${videoID}`;
                 }).catch((error) => {
                     console.log(error);
                 })
         }
-        fetch(`https://noembed.com/embed?dataType=json&url=${url}`)
-            .then(res => res.json())
-            .then((data) => {
-                title = data.title;
-            }).then(async () => {
-                const player = createAudioPlayer();
+        queue.push(url);
+        if (curState !== "I") {
+            interaction.reply(`Queued ${title}`);
+        }
+        else {
+            curState = "B";
+            url = queue.shift();
+            fetch(`https://noembed.com/embed?dataType=json&url=${url}`)
+                .then(res => res.json())
+                .then(async () => {
+                    const player = createAudioPlayer();
 
-                console.log(url);
-                const source = ytdl(url, { filter: 'audioonly' });
-                const resource = createAudioResource(source);
+                    console.log(url);
+                    const source = await ytdl.stream(url);
+                    const resource = createAudioResource(source.stream, { inputType: source.type });
 
-                const connection = joinVoiceChannel({
-                    channelId: interaction.member.voice.channel.id,
-                    guildId: interaction.guild.id,
-                    adapterCreator: interaction.guild.voiceAdapterCreator,
-                });
+                    const connection = joinVoiceChannel({
+                        channelId: interaction.member.voice.channel.id,
+                        guildId: interaction.guild.id,
+                        adapterCreator: interaction.guild.voiceAdapterCreator,
+                    });
 
-                connection.subscribe(player);
-                player.play(resource);
+                    connection.subscribe(player);
+                    player.play(resource);
 
-                // console.log('fetch', title);
-                interaction.reply(`Playing ${title}`);
+                    // console.log('fetch', title);
+                    interaction.reply(`Playing ${title}`);
 
-            }).catch((error) => {
-                console.log(error);
-            })
+                    player.on("error", error => {
+                        console.log(`Error: ${error.message} with resource ${error.resource.metadata.title}`)
+
+                    });
+
+                    player.on(AudioPlayerStatus.Idle, async () => {
+                        if (queue) {
+                            const source = await ytdl.stream(queue.shift());
+                            const resource = createAudioResource(source.stream, { inputType: source.type });
+                            player.play(resource);
+                        } else {
+                            curState = "I";
+                        }
+                    })
+                }).catch((error) => {
+                    console.log(error);
+                })
+        }
     },
 };
