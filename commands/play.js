@@ -1,5 +1,5 @@
 const { Client, SlashCommandBuilder, GatewayIntentBits } = require('discord.js');
-const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus } = require('@discordjs/voice');
+const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus } = require('@discordjs/voice');
 const ytdl = require('play-dl');
 const fetch = require("node-fetch");
 const isUrl = require("is-url");
@@ -10,7 +10,7 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 // Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN);
 
-const queue = [];
+var queue = [];
 var curState = "I";
 
 module.exports = {
@@ -46,6 +46,7 @@ module.exports = {
                 })
         }
         queue.push(url);
+        console.log(queue);
         if (curState !== "I") {
             interaction.reply(`Queued ${title}`);
         }
@@ -75,8 +76,12 @@ module.exports = {
 
                     player.on("error", error => {
                         console.log(`Error: ${error.message} with resource ${error.resource.metadata.title}`)
-
                     });
+
+                    connection.on(VoiceConnectionStatus.Destroyed, () => {
+                        queue = [];
+                        player.stop();
+                    })
 
                     player.on(AudioPlayerStatus.Idle, async () => {
                         if (queue) {
