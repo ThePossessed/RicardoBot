@@ -30,6 +30,8 @@ client.once(Events.ClientReady, c => {
 	console.log(`Ready! Logged in as ${c.user.tag}`);
 });
 
+client.queue = [];
+
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
 
@@ -45,7 +47,10 @@ client.on(Events.InteractionCreate, async interaction => {
 
 	try {
 		if (interaction.commandName === "play") {
-			await command.execute(interaction, interaction.options._hoistedOptions[0].value);
+			client.queue = await command.execute(interaction, interaction.options._hoistedOptions[0].value, client.queue);
+			console.log(client.queue);
+		} else if (interaction.commandName === "skip") {
+			client.queue = await command.execute(interaction, client.queue);
 		} else {
 			await command.execute(interaction);
 		}

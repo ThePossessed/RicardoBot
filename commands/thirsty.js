@@ -1,9 +1,5 @@
 const { Client, SlashCommandBuilder, GatewayIntentBits } = require('discord.js');
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-// Log in to Discord with your client's token
-client.login(process.env.DISCORD_TOKEN);
-
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('thirsty')
