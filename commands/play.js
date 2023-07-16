@@ -27,7 +27,7 @@ module.exports = {
             url = songName;
         } else if (!songName) {
             queue.shift();
-            if (!queue) {
+            if (queue.length === 0) {
                 curState = "I";
             }
             return queue;
@@ -84,12 +84,14 @@ module.exports = {
                     })
 
                     player.on(AudioPlayerStatus.Idle, async () => {
-                        if (queue) {
+                        console.log("Idle player: ", queue)
+                        if (queue.length !== 0) {
+                            curState = "B";
                             const source = await ytdl.stream(queue.shift());
                             const resource = createAudioResource(source.stream, { inputType: source.type });
                             player.play(resource);
                         } else {
-                            player.stop();
+                            connection.destroy();
                             curState = "I";
                         }
                     })
