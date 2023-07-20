@@ -5,6 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 // Require the necessary discord.js classes
 const { Client, Collection, Events, GatewayIntentBits, IntentsBitField } = require('discord.js');
+const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus } = require('@discordjs/voice');
+
 
 const myIntents = new IntentsBitField();
 myIntents.add(IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildVoiceStates);
@@ -30,6 +32,10 @@ client.once(Events.ClientReady, c => {
 	console.log(`Ready! Logged in as ${c.user.tag}`);
 });
 
+client.queue = [];
+client.player = createAudioPlayer();
+client.connection = null;
+
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
 
@@ -45,7 +51,9 @@ client.on(Events.InteractionCreate, async interaction => {
 
 	try {
 		if (interaction.commandName === "play") {
-			await command.execute(interaction, interaction.options._hoistedOptions[0].value);
+			client.queue = await command.execute(interaction, interaction.options._hoistedOptions[0].value, client.queue);
+		} else if (interaction.commandName === "skip") {
+			client.queue = await command.execute(interaction, client.queue);
 		} else {
 			await command.execute(interaction);
 		}

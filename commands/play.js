@@ -5,12 +5,6 @@ const fetch = require("node-fetch");
 const isUrl = require("is-url");
 require("dotenv").config();
 
-
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-// Log in to Discord with your client's token
-client.login(process.env.DISCORD_TOKEN);
-
-var queue = [];
 var curState = "I";
 
 module.exports = {
@@ -22,7 +16,7 @@ module.exports = {
                 .setDescription('song URL or song name')
                 .setRequired(false)
         ),
-    async execute(interaction, args) {
+    async execute(interaction, args, queue) {
         // console.log("Channel: ", interaction["channelId"]);
 
         var url = args;
@@ -31,6 +25,12 @@ module.exports = {
         const validURL = isUrl(songName);
         if (validURL) {
             url = songName;
+        } else if (!songName) {
+            queue.shift();
+            if (queue.length === 0) {
+                curState = "I";
+            }
+            return queue;
         } else {
             const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${songName}&key=${process.env.API_KEY}`;
             var videoID;
@@ -46,7 +46,6 @@ module.exports = {
                 })
         }
         queue.push(url);
-        console.log(queue);
         if (curState !== "I") {
             interaction.reply(`Queued ${title}`);
         }
@@ -81,14 +80,18 @@ module.exports = {
                     connection.on(VoiceConnectionStatus.Destroyed, () => {
                         queue = [];
                         player.stop();
+                        curState = "I";
                     })
 
                     player.on(AudioPlayerStatus.Idle, async () => {
-                        if (queue) {
+                        console.log("Idle player: ", queue)
+                        if (queue.length !== 0) {
+                            curState = "B";
                             const source = await ytdl.stream(queue.shift());
                             const resource = createAudioResource(source.stream, { inputType: source.type });
                             player.play(resource);
                         } else {
+                            connection.destroy();
                             curState = "I";
                         }
                     })
@@ -96,5 +99,6 @@ module.exports = {
                     console.log(error);
                 })
         }
+        return queue;
     },
 };
