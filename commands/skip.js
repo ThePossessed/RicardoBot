@@ -36,11 +36,12 @@ module.exports = {
                 return queue;
             }
         } else {
-            const source = await ytdl.stream(queue.shift());
+            const song = queue.shift();
+            const source = await ytdl.stream(song[0]);
             const resource = createAudioResource(source.stream, { inputType: source.type });
             connection.state.subscription.player.play(resource);
 
-            await interaction.reply("Skip!!");
+            await interaction.reply(`Skip!! Now playing ${song[1]}`);
             return queue;
         }
     },
