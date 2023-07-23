@@ -21,7 +21,7 @@ module.exports = {
         if (queue.length === 0) {
             connection.destroy();
             let user = await client.users.fetch('345082365405560834');
-            await interaction.reply("Out of water. {user} pls gives me more.");
+            await interaction.reply("Ricardo bot out of water. {user} gives me more onegai.");
             return queue;
         } else {
             const source = await ytdl.stream(queue.shift());
