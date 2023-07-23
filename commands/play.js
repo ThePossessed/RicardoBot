@@ -86,13 +86,20 @@ module.exports = {
                     player.on(AudioPlayerStatus.Idle, async () => {
                         console.log("Idle player: ", queue)
                         if (queue.length !== 0) {
-                            curState = "B";
                             const source = await ytdl.stream(queue.shift());
                             const resource = createAudioResource(source.stream, { inputType: source.type });
                             player.play(resource);
                         } else {
-                            connection.destroy();
+                            connection.state.subscription.player.stop();
+                        }
+                    })
+
+                    player.on('stateChange', async (oldState, newState) => {
+                        console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
+                        if (newState.status === 'idle' || newState.status === 'autopaused') {
                             curState = "I";
+                        } else {
+                            curState = "B";
                         }
                     })
                 }).catch((error) => {
