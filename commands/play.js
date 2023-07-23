@@ -16,13 +16,37 @@ module.exports = {
                 .setDescription('song URL or song name')
                 .setRequired(false)
         ),
-    async execute(interaction, args, queue) {
+    async execute(interaction, args, queue, mode) {
         // console.log("Channel: ", interaction["channelId"]);
+        const player = createAudioPlayer();
+
+        const connection = joinVoiceChannel({
+            channelId: interaction.member.voice.channel.id,
+            guildId: interaction.guild.id,
+            adapterCreator: interaction.guild.voiceAdapterCreator,
+        });
+
+        if (mode === "S") {
+            if (queue.length > 0) {
+                interaction.reply(`Skipped`);
+                const source = await ytdl.stream(queue.shift());
+                const resource = createAudioResource(source.stream, { inputType: source.type });
+                connection.subscribe(player);
+                player.play(resource);
+                return queue;
+            } else {
+                interaction.reply(`End of queue`);
+                connection.state.subscription.player.stop();
+                return queue;
+            }
+        }
 
         var url = args;
         var title;
         const songName = interaction.options.getString('query');
         const validURL = isUrl(songName);
+
+
         if (validURL) {
             url = songName;
         } else if (!songName) {
@@ -55,17 +79,9 @@ module.exports = {
             fetch(`https://noembed.com/embed?dataType=json&url=${url}`)
                 .then(res => res.json())
                 .then(async () => {
-                    const player = createAudioPlayer();
-
                     console.log(url);
                     const source = await ytdl.stream(url);
                     const resource = createAudioResource(source.stream, { inputType: source.type });
-
-                    const connection = joinVoiceChannel({
-                        channelId: interaction.member.voice.channel.id,
-                        guildId: interaction.guild.id,
-                        adapterCreator: interaction.guild.voiceAdapterCreator,
-                    });
 
                     connection.subscribe(player);
                     player.play(resource);
@@ -86,15 +102,25 @@ module.exports = {
                     player.on(AudioPlayerStatus.Idle, async () => {
                         console.log("Idle player: ", queue)
                         if (queue.length !== 0) {
-                            curState = "B";
+                            // curState = "B";
                             const source = await ytdl.stream(queue.shift());
                             const resource = createAudioResource(source.stream, { inputType: source.type });
                             player.play(resource);
                         } else {
-                            connection.destroy();
-                            curState = "I";
+                            // connection.destroy();
+                            // curState = "I";
                         }
                     })
+
+                    player.on('stateChange', async (oldState, newState) => {
+                        console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
+                        if (newState.status === 'idle' || newState.status === 'autopaused') {
+                            curState = "I";
+                        } else {
+                            curState = "B";
+                        }
+                    })
+
                 }).catch((error) => {
                     console.log(error);
                 })

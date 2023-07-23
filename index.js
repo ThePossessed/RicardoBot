@@ -35,11 +35,22 @@ client.once(Events.ClientReady, c => {
 client.queue = [];
 client.player = createAudioPlayer();
 client.connection = null;
+client.audioMode = "N"; // Normal
+var command;
 
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
 
-	const command = client.commands.get(interaction.commandName);
+	client.audioMode = "N"; // Reset mode
+
+	if (interaction.commandName === "skip") {
+		client.audioMode = "S"; // Skip
+		command = client.commands.get("play");
+	} else {
+		command = client.commands.get(interaction.commandName);
+	}
+
+
 	console.log(command);
 
 	if (!command) {
@@ -49,11 +60,12 @@ client.on(Events.InteractionCreate, async interaction => {
 
 	// FYI: get arguments using: interaction.options._hoistedOptions[0].value
 
+
 	try {
 		if (interaction.commandName === "play") {
-			client.queue = await command.execute(interaction, interaction.options._hoistedOptions[0].value, client.queue);
+			client.queue = await command.execute(interaction, interaction.options._hoistedOptions[0].value, client.queue, client.audioMode);
 		} else if (interaction.commandName === "skip") {
-			client.queue = await command.execute(interaction, client.queue);
+			client.queue = await command.execute(interaction, "", client.queue, client.audioMode);
 		} else {
 			await command.execute(interaction);
 		}

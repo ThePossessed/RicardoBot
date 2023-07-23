@@ -36,7 +36,7 @@ module.exports = {
                     const resource = createAudioResource(source.stream, { inputType: source.type });
                     player.play(resource);
                 } else {
-                    connection.destroy();
+                    // connection.destroy();
                 }
             })
 
