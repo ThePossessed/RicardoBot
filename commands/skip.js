@@ -21,7 +21,7 @@ module.exports = {
         if (queue.length === 0) {
             connection.destroy();
 
-            await interaction.reply("Out of songs in queue. Leaving voice channel");
+            await interaction.reply("Out of water. Leaving voice channel");
             return queue;
         } else {
             const source = await ytdl.stream(queue.shift());
