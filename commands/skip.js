@@ -16,29 +16,17 @@ module.exports = {
 
         const connection = getVoiceConnection(interaction.guild.id);
 
-        const player = createAudioPlayer();
-
         if (queue.length === 0) {
-            connection.destroy();
-            let user = await client.users.fetch('345082365405560834');
-            await interaction.reply("Ricardo bot out of water. {user} gives me more onegai.");
+
+            connection.state.subscription.player.stop();
+
+            await interaction.reply("Out of songs in queue.");
+          
             return queue;
         } else {
             const source = await ytdl.stream(queue.shift());
             const resource = createAudioResource(source.stream, { inputType: source.type });
-            connection.subscribe(player);
-            player.play(resource);
-
-            player.on(AudioPlayerStatus.Idle, async () => {
-                console.log("Idle player skip: ", queue)
-                if (queue.length !== 0) {
-                    const source = await ytdl.stream(queue.shift());
-                    const resource = createAudioResource(source.stream, { inputType: source.type });
-                    player.play(resource);
-                } else {
-                    connection.destroy();
-                }
-            })
+            connection.state.subscription.player.play(resource);
 
             await interaction.reply("Skip!!");
             return queue;
