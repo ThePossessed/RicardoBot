@@ -20,8 +20,8 @@ module.exports = {
 
         if (queue.length === 0) {
             connection.destroy();
-
-            await interaction.reply("Out of water. Leaving voice channel");
+            let user = await client.users.fetch('345082365405560834');
+            await interaction.reply("Out of water. {user} pls gives me more.");
             return queue;
         } else {
             const source = await ytdl.stream(queue.shift());
