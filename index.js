@@ -39,8 +39,16 @@ client.connection = null;
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
 
+	if (!interaction.member.voice.channel) {
+		let user = await client.users.fetch('345082365405560834');
+		await interaction.reply(`Thou must be in a voice channel to command me. The god of water ${user} forbids this.`);
+		return;
+	}
+
 	const command = client.commands.get(interaction.commandName);
 	console.log(command);
+
+	console.log(interaction.user)
 
 	if (!command) {
 		console.error(`No command matching ${interaction.commandName} was found.`);
