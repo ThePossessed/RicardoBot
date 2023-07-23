@@ -17,9 +17,11 @@ module.exports = {
         const connection = getVoiceConnection(interaction.guild.id);
 
         if (queue.length === 0) {
+
             connection.state.subscription.player.stop();
 
             await interaction.reply("Out of songs in queue.");
+          
             return queue;
         } else {
             const source = await ytdl.stream(queue.shift());
