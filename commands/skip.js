@@ -41,7 +41,7 @@ module.exports = {
             const resource = createAudioResource(source.stream, { inputType: source.type });
             connection.state.subscription.player.play(resource);
 
-            await interaction.reply(`Skip!! Now playing ${song[1]}`);
+            await interaction.reply(`Skip!! Now playing [${song[1]}](${song[0]})`);
             return queue;
         }
     },

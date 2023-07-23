@@ -1,4 +1,4 @@
-const { Client, SlashCommandBuilder, GatewayIntentBits } = require('discord.js');
+const { Client, SlashCommandBuilder, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus } = require('@discordjs/voice');
 const ytdl = require('play-dl');
 const fetch = require("node-fetch");
@@ -101,7 +101,7 @@ module.exports = {
             if (is_playlist) {
                 interaction.reply(`Queued playlist with ${url.length} songs!`);
             } else {
-                interaction.reply(`Queued ${title}`);
+                interaction.reply(`Queued [${url[0][1]}](${url[0][0]})`);
             }
         }
         else {
@@ -128,7 +128,7 @@ module.exports = {
                     player.play(resource);
 
                     // console.log('fetch', title);
-                    interaction.reply(`Playing ${title}`);
+                    interaction.reply(`Playing [${title}](${url})`);
 
                     player.on("error", error => {
                         console.log(`Error: ${error.message} with resource ${error.resource.metadata.title}`)
@@ -147,7 +147,12 @@ module.exports = {
                             const source = await ytdl.stream(song[0]);
                             const resource = createAudioResource(source.stream, { inputType: source.type });
                             player.play(resource);
-                            client.channels.cache.get(channelID).send(`Playing ${song[1]}`);
+                            // const embedmsg = new EmbedBuilder()
+                            //     .setTitle(song[1])
+                            //     .setURL(song[0])
+
+                            // // await interaction.reply({ content: `Your wish is my command. ${user} shall grant you his precious nude.`, embeds: [embedmsg] })
+                            // client.channels.cache.get(channelID).send({ content: `Playing `, embeds: [embedmsg] });
                         } else {
                             connection.state.subscription.player.stop();
                         }
