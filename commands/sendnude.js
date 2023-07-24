@@ -24,10 +24,10 @@ const gif_list = [
     "https://media.tenor.com/Lxg6C9a7eGoAAAAM/rasen-milos-rasengan.gif"
 ]
 
-const secret_image = [
-    "/../assets/Nam_nguyen_rido.jpg",
-    "/../assets/Namrido.jpg"
-]
+// const secret_image = [
+//     "/../assets/Nam_nguyen_rido.jpg",
+//     "/../assets/Namrido.jpg"
+// ]
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -37,32 +37,32 @@ module.exports = {
     async execute(interaction) {
         const coinflip = Math.random();
 
-        if (coinflip < 0.1) {
-            var randomfile = secret_image[Math.floor(Math.random() * secret_image.length)]
-            let user = await client.users.fetch('345082365405560834');
-            let luckyuser = await client.users.fetch(interaction.user.id);
+        // if (coinflip < 0.1) {
+        //     var randomfile = secret_image[Math.floor(Math.random() * secret_image.length)]
+        //     let user = await client.users.fetch('345082365405560834');
+        //     let luckyuser = await client.users.fetch(interaction.user.id);
 
-            const file = new AttachmentBuilder(__dirname + randomfile);
-            var filename = randomfile.split("/");
-            filename = filename[filename.length - 1];
+        //     const file = new AttachmentBuilder(__dirname + randomfile);
+        //     var filename = randomfile.split("/");
+        //     filename = filename[filename.length - 1];
 
-            const embedmsg = new EmbedBuilder()
-                .setImage("attachment://" + filename)
-
-
-            await interaction.reply({ content: `${luckyuser} You lucky bastard! ${user} shall give you his secret nude!`, embeds: [embedmsg], files: [file] })
-            return;
-        } else {
-            var randomgif = gif_list[Math.floor(Math.random() * gif_list.length)]
-            let user = await client.users.fetch('345082365405560834');
-
-            const embedmsg = new EmbedBuilder()
-                .setImage(randomgif)
+        //     const embedmsg = new EmbedBuilder()
+        //         .setImage("attachment://" + filename)
 
 
-            await interaction.reply({ content: `Your wish is my command. ${user} shall grant you his precious nude.`, embeds: [embedmsg] })
-            return;
-        }
+        //     await interaction.reply({ content: `${luckyuser} You lucky bastard! ${user} shall give you his secret nude!`, embeds: [embedmsg], files: [file] })
+        //     return;
+        // } else {
+        var randomgif = gif_list[Math.floor(Math.random() * gif_list.length)]
+        let user = await client.users.fetch('345082365405560834');
+
+        const embedmsg = new EmbedBuilder()
+            .setImage(randomgif)
+
+
+        await interaction.reply({ content: `Your wish is my command. ${user} shall grant you his precious nude.`, embeds: [embedmsg] })
+        return;
+        // }
 
 
         // await interaction.reply(`Your wish is my command. ${user} shall grant you his precious nude.\n${randomgif}`)
