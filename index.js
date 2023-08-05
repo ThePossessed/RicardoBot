@@ -4,7 +4,7 @@ require("dotenv").config();
 const fs = require('node:fs');
 const path = require('node:path');
 // Require the necessary discord.js classes
-const { Client, Collection, Events, GatewayIntentBits, IntentsBitField } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, IntentsBitField, ClientPresence, Presence } = require('discord.js');
 const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus } = require('@discordjs/voice');
 
 
@@ -36,6 +36,37 @@ client.queue = [];
 client.player = createAudioPlayer();
 client.connection = null;
 
+client.on(Events.VoiceStateUpdate, async interaction => {
+	const guildId = interaction.guild.id;
+	const voiceId = interaction.channelId;
+	let size;
+
+
+	try {
+		let guild = client.guilds.cache.get(guildId);
+		let voiceChannel = await guild.channels.fetch(voiceId, { force: true })
+		size = voiceChannel.members?.size;
+	} catch (error) {
+		console.log(error)
+	}
+
+	console.log("member in voice", size)
+
+	if (size === 1) {
+		try {
+			const { getVoiceConnection } = require('@discordjs/voice');
+
+			const connection = getVoiceConnection(interaction.guild.id);
+
+			connection.destroy();
+		} catch (error) {
+			console.log(error)
+		}
+	} else {
+
+	}
+})
+
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
 
@@ -46,7 +77,7 @@ client.on(Events.InteractionCreate, async interaction => {
 	}
 
 	const command = client.commands.get(interaction.commandName);
-	console.log(command);
+	// console.log(interaction.member.voice.channel.members.size);
 
 	console.log(interaction.user)
 
