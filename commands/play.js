@@ -112,17 +112,21 @@ module.exports = {
             fetch(`https://noembed.com/embed?dataType=json&url=${url}`)
                 .then(res => res.json())
                 .then(async () => {
+                    const { getVoiceConnection } = require('@discordjs/voice');
                     const player = createAudioPlayer();
 
                     console.log(url);
                     const source = await ytdl.stream(url);
                     const resource = createAudioResource(source.stream, { inputType: source.type });
 
-                    const connection = joinVoiceChannel({
-                        channelId: interaction.member.voice.channel.id,
-                        guildId: interaction.guild.id,
-                        adapterCreator: interaction.guild.voiceAdapterCreator,
-                    });
+                    var connection = getVoiceConnection(interaction.guild.id);
+                    if (connection == null) {
+                        connection = joinVoiceChannel({
+                            channelId: interaction.member.voice.channel.id,
+                            guildId: interaction.guild.id,
+                            adapterCreator: interaction.guild.voiceAdapterCreator,
+                        });
+                    }
 
                     connection.subscribe(player);
                     player.play(resource);

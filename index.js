@@ -87,13 +87,22 @@ client.on(Events.InteractionCreate, async interaction => {
 	}
 
 	// FYI: get arguments using: interaction.options._hoistedOptions[0].value
+	var args;
+	if (typeof interaction.options._hoistedOptions[0] === "undefined") {
+		args = '';
+	} else {
+		args = interaction.options._hoistedOptions[0].value;
+	}
 
 	try {
 		if (interaction.commandName === "play") {
-			client.queue = await command.execute(interaction, interaction.options._hoistedOptions[0].value, client.queue);
+			client.queue = await command.execute(interaction, args, client.queue);
 		} else if (interaction.commandName === "skip") {
 			client.queue = await command.execute(interaction, client.queue);
-		} else {
+		} else if (interaction.commandName === "speak") {
+			await command.execute(interaction, args)
+		}
+		else {
 			await command.execute(interaction);
 		}
 	} catch (error) {

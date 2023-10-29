@@ -18,6 +18,13 @@ module.exports = {
         const { getVoiceConnection } = require('@discordjs/voice');
 
         const connection = getVoiceConnection(interaction.guild.id);
+        if (connection == null) {
+            connection = joinVoiceChannel({
+                channelId: interaction.member.voice.channel.id,
+                guildId: interaction.guild.id,
+                adapterCreator: interaction.guild.voiceAdapterCreator,
+            });
+        }
 
         if (queue.length === 0) {
             try {
