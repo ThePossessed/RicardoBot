@@ -113,7 +113,11 @@ module.exports = {
                 .then(res => res.json())
                 .then(async () => {
                     const { getVoiceConnection } = require('@discordjs/voice');
-                    const player = createAudioPlayer();
+                    var player;
+                    if (typeof connection?.state.subscription.player !== "undefined") {
+                        connection.state.subscription.player.stop();
+                    }
+                    player = createAudioPlayer();
 
                     console.log(url);
                     const source = await ytdl.stream(url);
@@ -158,7 +162,7 @@ module.exports = {
                             // // await interaction.reply({ content: `Your wish is my command. ${user} shall grant you his precious nude.`, embeds: [embedmsg] })
                             // client.channels.cache.get(channelID).send({ content: `Playing `, embeds: [embedmsg] });
                         } else {
-                            connection.state.subscription.player.stop();
+                            player.stop(); //connection.state.subscription.player.stop();
                         }
                     })
 

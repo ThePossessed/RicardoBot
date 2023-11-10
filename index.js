@@ -29,43 +29,76 @@ for (const file of commandFiles) {
 }
 
 client.once(Events.ClientReady, c => {
-	console.log(`Ready! Logged in as ${c.user.tag}`);
+	console.log(`Ready! Logged in as ${c.user.tag} with id ${c.user.id}`);
 });
 
 client.queue = [];
 client.player = createAudioPlayer();
 client.connection = null;
+client.botID = '1082531882291445850';
+client.targetID = '345082365405560834';
 
-client.on(Events.VoiceStateUpdate, async interaction => {
-	const guildId = interaction.guild.id;
-	const voiceId = interaction.channelId;
-	let size;
-
-
-	try {
-		let guild = client.guilds.cache.get(guildId);
-		let voiceChannel = await guild.channels.fetch(voiceId, { force: true })
-		size = voiceChannel.members?.size;
-	} catch (error) {
-		console.log(error)
-	}
-
-	console.log("member in voice", size)
-
-	if (size === 1) {
+client.on('voiceStateUpdate', async (oldState, newState) => {
+	const actor = newState.member.id;
+	if (newState.channelId === null) {
+		console.log('user left channel', oldState.channelId);
+		const guildId = oldState.guild.id;
+		const voiceId = oldState.channelId;
+		let size;
 		try {
-			const { getVoiceConnection } = require('@discordjs/voice');
-
-			const connection = getVoiceConnection(interaction.guild.id);
-
-			connection.destroy();
+			let guild = client.guilds.cache.get(guildId);
+			let voiceChannel = await guild.channels.fetch(voiceId, { force: true })
+			size = voiceChannel.members?.size;
 		} catch (error) {
 			console.log(error)
 		}
-	} else {
 
+		console.log("member in voice", size)
+
+		if (size === 1) {
+			try {
+				const { getVoiceConnection } = require('@discordjs/voice');
+
+				const connection = getVoiceConnection(guildId);
+
+				connection.destroy();
+			} catch (error) {
+				console.log(error)
+			}
+		} else {
+
+		}
 	}
-})
+	if (actor != client.botID && actor == client.targetID) {
+		const { getVoiceConnection } = require('@discordjs/voice');
+		// console.log(newState)
+		if (newState.channelId === null) {
+			console.log('user left channel', oldState.channelId);
+		}
+		else if (oldState.channelId === null) {
+			console.log('user joined channel', newState.channelId);
+			var connection = getVoiceConnection(newState.guild.id, newState.channelId);
+			if (connection == null) {
+				connection = joinVoiceChannel({
+					channelId: newState.channelId,
+					guildId: newState.guild.id,
+					adapterCreator: newState.guild.voiceAdapterCreator,
+				});
+			}
+		}
+		else {
+			console.log('user moved channels', oldState.channelId, newState.channelId);
+			var connection = getVoiceConnection(newState.guild.id, newState.channelId);
+			if (connection == null) {
+				connection = joinVoiceChannel({
+					channelId: newState.channelId,
+					guildId: newState.guild.id,
+					adapterCreator: newState.guild.voiceAdapterCreator,
+				});
+			}
+		}
+	}
+});
 
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
@@ -101,6 +134,7 @@ client.on(Events.InteractionCreate, async interaction => {
 			client.queue = await command.execute(interaction, client.queue);
 		} else if (interaction.commandName === "speak") {
 			await command.execute(interaction, args)
+			client.queue = []
 		}
 		else {
 			await command.execute(interaction);

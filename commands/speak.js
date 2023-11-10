@@ -17,6 +17,9 @@ module.exports = {
 
         if (args.length == 0) {
             var base64data = "data:audio/mp3;base64," + process.env.TESTDATA;
+            if (typeof connection?.state.subscription.player !== "undefined") {
+                connection.state.subscription.player.stop();
+            }
             const player = createAudioPlayer();
 
             // console.log(url);
@@ -81,6 +84,9 @@ module.exports = {
                                 base64data = "data:audio/mp3;base64," + process.env.TESTDATA;
                             } else {
                                 base64data = "data:audio/mp3;base64," + response.data.google.audio;
+                            }
+                            if (typeof connection?.state.subscription.player !== "undefined") {
+                                connection.state.subscription.player.stop();
                             }
                             const player = createAudioPlayer();
 
