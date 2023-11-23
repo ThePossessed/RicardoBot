@@ -129,6 +129,7 @@ module.exports = {
                             channelId: interaction.member.voice.channel.id,
                             guildId: interaction.guild.id,
                             adapterCreator: interaction.guild.voiceAdapterCreator,
+                            selfDeaf: false
                         });
                     }
 

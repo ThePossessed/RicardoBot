@@ -31,6 +31,7 @@ module.exports = {
                     channelId: interaction.member.voice.channel.id,
                     guildId: interaction.guild.id,
                     adapterCreator: interaction.guild.voiceAdapterCreator,
+                    selfDeaf: false
                 });
             }
             // connection.state.subscription.player.stop();
@@ -99,6 +100,7 @@ module.exports = {
                                     channelId: interaction.member.voice.channel.id,
                                     guildId: interaction.guild.id,
                                     adapterCreator: interaction.guild.voiceAdapterCreator,
+                                    selfDeaf: false
                                 });
                             }
                             // connection.state.subscription.player.stop();

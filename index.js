@@ -5,14 +5,17 @@ const fs = require('node:fs');
 const path = require('node:path');
 // Require the necessary discord.js classes
 const { Client, Collection, Events, GatewayIntentBits, IntentsBitField, ClientPresence, Presence } = require('discord.js');
-const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus } = require('@discordjs/voice');
+const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus, getVoiceConnection, EndBehaviorType } = require('@discordjs/voice');
+const prism = require("prism-media");
+const { connect } = require("node:http2");
 
+require('events').EventEmitter.prototype._maxListeners = 100;
 
 const myIntents = new IntentsBitField();
 myIntents.add(IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildVoiceStates);
 
 // Create a new client instance
-const client = new Client({ intents: [GatewayIntentBits.Guilds, myIntents] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, , myIntents] });
 
 // Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN);
@@ -37,9 +40,12 @@ client.player = createAudioPlayer();
 client.connection = null;
 client.botID = '1082531882291445850';
 client.targetID = '345082365405560834';
+process.setMaxListeners(1)
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
 	const actor = newState.member.id;
+
+	// Someone quits a voice channel
 	if (newState.channelId === null) {
 		console.log('user left channel', oldState.channelId);
 		const guildId = oldState.guild.id;
@@ -57,8 +63,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
 		if (size === 1) {
 			try {
-				const { getVoiceConnection } = require('@discordjs/voice');
-
 				const connection = getVoiceConnection(guildId);
 
 				connection.destroy();
@@ -69,8 +73,58 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
 		}
 	}
-	if (actor != client.botID && actor == client.targetID) {
-		const { getVoiceConnection } = require('@discordjs/voice');
+
+	// Bot action
+	if (actor == client.botID) {
+		if (newState.channelId !== null) {
+			var connection = getVoiceConnection(newState.guild.id, newState.channelId);
+			if (connection == null) {
+				connection = joinVoiceChannel({
+					channelId: newState.channelId,
+					guildId: newState.guild.id,
+					adapterCreator: newState.guild.voiceAdapterCreator,
+					selfDeaf: false
+				});
+			}
+
+			connection.receiver.speaking.on('start', (userId) => {
+				if (connection.receiver.subscriptions.get(userId) == null) {
+					const audio = connection.receiver.subscribe(userId, {
+						end: {
+							behavior: EndBehaviorType.AfterSilence,
+							duration: 1000
+						}
+					});
+					const currentdate = new Date();
+					const timestamp = "" + currentdate.getDate() + (currentdate.getMonth() + 1) + currentdate.getFullYear() + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds();
+					const saveDir = `${__dirname}/voiceData/${userId}`
+					const fileName = `${userId}_${timestamp}.pcm`
+					const writeStream = fs.createWriteStream(saveDir + "/" + fileName)
+					console.log(`${userId} Speaking at ${currentdate}`)
+					if (!fs.existsSync(saveDir)) {
+						fs.mkdirSync(saveDir);
+					}
+
+					const opusDecoder = new prism.opus.Decoder({
+						frameSize: 960,
+						channels: 2,
+						rate: 48000,
+					})
+
+					audio.pipe(opusDecoder).pipe(writeStream)
+				} else {
+					return
+				}
+			})
+
+			// connection.receiver.speaking.on("end", (userId) => {
+			// 	writeStream.end();
+			// })
+		}
+	}
+
+	// Minam action
+	else if (actor != client.botID && actor == client.targetID) {
 		// console.log(newState)
 		if (newState.channelId === null) {
 			console.log('user left channel', oldState.channelId);
@@ -83,7 +137,12 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 					channelId: newState.channelId,
 					guildId: newState.guild.id,
 					adapterCreator: newState.guild.voiceAdapterCreator,
+					selfDeaf: false
 				});
+				connection.receiver.speaking.on('start', (userId) => {
+					//actions here
+					console.log(userId)
+				})
 			}
 		}
 		else {
@@ -94,7 +153,12 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 					channelId: newState.channelId,
 					guildId: newState.guild.id,
 					adapterCreator: newState.guild.voiceAdapterCreator,
+					selfDeaf: false
 				});
+				connection.receiver.speaking.on('start', (userId) => {
+					//actions here
+					console.log(userId)
+				})
 			}
 		}
 	}
