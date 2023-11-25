@@ -1,6 +1,7 @@
 const { Client, SlashCommandBuilder, GatewayIntentBits } = require('discord.js');
 const { createAudioPlayer, createAudioResource, joinVoiceChannel } = require('@discordjs/voice');
 const fetch = require("node-fetch");
+const { initiateConnection } = require("../utils/HelperFunction/initiateConnection")
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -10,22 +11,18 @@ module.exports = {
         const { getVoiceConnection } = require('@discordjs/voice');
 
         const connection = getVoiceConnection(interaction.guild.id);
+
         if (connection == null) {
-            connection = joinVoiceChannel({
-                channelId: interaction.member.voice.channel.id,
-                guildId: interaction.guild.id,
-                adapterCreator: interaction.guild.voiceAdapterCreator,
-                selfDeaf: false
-            });
+            await interaction.reply("Not in voice channel");
         }
-
-        try {
-            connection.state.subscription.player.stop();
-        } catch (error) {
-            console.log(error);
+        else {
+            try {
+                connection.state.subscription.player.stop();
+                connection.destroy();
+                await interaction.reply("Leaving voice channel");
+            } catch (error) {
+                console.log(error);
+            }
         }
-        connection.destroy();
-
-        await interaction.reply("Leaving voice channel");
     },
 };

@@ -2,6 +2,7 @@ const { Client, SlashCommandBuilder, GatewayIntentBits } = require('discord.js')
 const { createAudioPlayer, createAudioResource, joinVoiceChannel } = require('@discordjs/voice');
 const axios = require("axios").default;
 const fetch = require("node-fetch");
+const { initiateConnection } = require("../utils/HelperFunction/initiateConnection")
 require("dotenv").config();
 module.exports = {
     data: new SlashCommandBuilder()
@@ -13,8 +14,6 @@ module.exports = {
                 .setRequired(false)
         ),
     async execute(interaction, args) {
-        const { getVoiceConnection } = require('@discordjs/voice');
-
         if (args.length == 0) {
             var base64data = "data:audio/mp3;base64," + process.env.TESTDATA;
             if (typeof connection?.state.subscription.player !== "undefined") {
@@ -25,15 +24,7 @@ module.exports = {
             // console.log(url);
             const resource = createAudioResource(base64data);
 
-            var connection = getVoiceConnection(interaction.guild.id);
-            if (connection == null) {
-                connection = joinVoiceChannel({
-                    channelId: interaction.member.voice.channel.id,
-                    guildId: interaction.guild.id,
-                    adapterCreator: interaction.guild.voiceAdapterCreator,
-                    selfDeaf: false
-                });
-            }
+            var connection = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator)
             // connection.state.subscription.player.stop();
             // connection.destroy();
 
@@ -94,15 +85,7 @@ module.exports = {
                             // console.log(url);
                             const resource = createAudioResource(base64data);
 
-                            var connection = getVoiceConnection(interaction.guild.id);
-                            if (connection == null) {
-                                connection = joinVoiceChannel({
-                                    channelId: interaction.member.voice.channel.id,
-                                    guildId: interaction.guild.id,
-                                    adapterCreator: interaction.guild.voiceAdapterCreator,
-                                    selfDeaf: false
-                                });
-                            }
+                            var connection = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator)
                             // connection.state.subscription.player.stop();
                             // connection.destroy();
 

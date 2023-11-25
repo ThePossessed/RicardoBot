@@ -3,6 +3,7 @@ const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerSta
 const ytdl = require('play-dl');
 const fetch = require("node-fetch");
 const isUrl = require("is-url");
+const { initiateConnection } = require("../utils/HelperFunction/initiateConnection")
 require("dotenv").config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -18,39 +19,38 @@ module.exports = {
         const { getVoiceConnection } = require('@discordjs/voice');
 
         const connection = getVoiceConnection(interaction.guild.id);
+
         if (connection == null) {
-            connection = joinVoiceChannel({
-                channelId: interaction.member.voice.channel.id,
-                guildId: interaction.guild.id,
-                adapterCreator: interaction.guild.voiceAdapterCreator,
-                selfDeaf: false
-            });
+            let user = await client.users.fetch('345082365405560834');
+            await interaction.reply(`Ricardo bot is not connected to any channel. ${user}, the god of water, please let me in!`);
         }
-
-        if (queue.length === 0) {
-            try {
-                connection.state.subscription.player.stop();
-
+        else if (queue.length === 0) {
+            if (connection.state.subscription.player == null) {
                 let user = await client.users.fetch('345082365405560834');
-                await interaction.reply(`Ricardo bot out of water. ${user} gives me more onegai.`);
-
-                return queue;
-            } catch (error) {
-                console.log(error);
-
-                let user = await client.users.fetch('345082365405560834');
-                await interaction.reply(`Ricardo bot is not connected to any channel. ${user}, the god of water, please let me in!`);
-
-                return queue;
+                await interaction.reply(`Ricardo bot doesn't play anything. ${user} please play me.`);
             }
-        } else {
+            else {
+                try {
+                    connection.state.subscription.player.stop();
+
+                    let user = await client.users.fetch('345082365405560834');
+                    await interaction.reply(`Ricardo bot out of water. ${user} gives me more onegai.`);
+                } catch (error) {
+                    console.log(error);
+
+                    let user = await client.users.fetch('345082365405560834');
+                    await interaction.reply(`Ricardo bot is not connected to any channel. ${user}, the god of water, please let me in!`);
+                }
+            }
+        }
+        else {
             const song = queue.shift();
             const source = await ytdl.stream(song[0]);
             const resource = createAudioResource(source.stream, { inputType: source.type });
             connection.state.subscription.player.play(resource);
 
             await interaction.reply(`Skip!! Now playing [${song[1]}](${song[0]})`);
-            return queue;
         }
+        return queue
     },
 };

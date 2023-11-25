@@ -3,6 +3,7 @@ const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerSta
 const ytdl = require('play-dl');
 const fetch = require("node-fetch");
 const isUrl = require("is-url");
+const { initiateConnection } = require("../utils/HelperFunction/initiateConnection")
 require("dotenv").config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -112,7 +113,6 @@ module.exports = {
             fetch(`https://noembed.com/embed?dataType=json&url=${url}`)
                 .then(res => res.json())
                 .then(async () => {
-                    const { getVoiceConnection } = require('@discordjs/voice');
                     var player;
                     if (typeof connection?.state.subscription.player !== "undefined") {
                         connection.state.subscription.player.stop();
@@ -123,15 +123,7 @@ module.exports = {
                     const source = await ytdl.stream(url);
                     const resource = createAudioResource(source.stream, { inputType: source.type });
 
-                    var connection = getVoiceConnection(interaction.guild.id);
-                    if (connection == null) {
-                        connection = joinVoiceChannel({
-                            channelId: interaction.member.voice.channel.id,
-                            guildId: interaction.guild.id,
-                            adapterCreator: interaction.guild.voiceAdapterCreator,
-                            selfDeaf: false
-                        });
-                    }
+                    var connection = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator)
 
                     connection.subscribe(player);
                     player.play(resource);

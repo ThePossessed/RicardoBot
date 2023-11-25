@@ -7,7 +7,7 @@ const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits, IntentsBitField, ClientPresence, Presence } = require('discord.js');
 const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus, getVoiceConnection, EndBehaviorType } = require('@discordjs/voice');
 const prism = require("prism-media");
-const { connect } = require("node:http2");
+const { initiateConnection } = require("./utils/HelperFunction/initiateConnection")
 
 require('events').EventEmitter.prototype._maxListeners = 100;
 
@@ -76,50 +76,9 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
 	// Bot action
 	if (actor == client.botID) {
+		// Bot join a channel
 		if (newState.channelId !== null) {
-			var connection = getVoiceConnection(newState.guild.id, newState.channelId);
-			if (connection == null) {
-				connection = joinVoiceChannel({
-					channelId: newState.channelId,
-					guildId: newState.guild.id,
-					adapterCreator: newState.guild.voiceAdapterCreator,
-					selfDeaf: false
-				});
-			}
 
-			connection.receiver.speaking.on('start', (userId) => {
-				if (connection.receiver.subscriptions.get(userId) == null) {
-					const audio = connection.receiver.subscribe(userId, {
-						end: {
-							behavior: EndBehaviorType.AfterSilence,
-							duration: 1000
-						}
-					});
-					const currentdate = new Date();
-					const timestamp = "" + currentdate.getDate() + (currentdate.getMonth() + 1) + currentdate.getFullYear() + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds();
-					const saveDir = `${__dirname}/voiceData/${userId}`
-					const fileName = `${userId}_${timestamp}.pcm`
-					const writeStream = fs.createWriteStream(saveDir + "/" + fileName)
-					console.log(`${userId} Speaking at ${currentdate}`)
-					if (!fs.existsSync(saveDir)) {
-						fs.mkdirSync(saveDir);
-					}
-
-					const opusDecoder = new prism.opus.Decoder({
-						frameSize: 960,
-						channels: 2,
-						rate: 48000,
-					})
-
-					audio.pipe(opusDecoder).pipe(writeStream)
-				} else {
-					return
-				}
-			})
-
-			// connection.receiver.speaking.on("end", (userId) => {
-			// 	writeStream.end();
-			// })
 		}
 	}
 
@@ -131,35 +90,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 		}
 		else if (oldState.channelId === null) {
 			console.log('user joined channel', newState.channelId);
-			var connection = getVoiceConnection(newState.guild.id, newState.channelId);
-			if (connection == null) {
-				connection = joinVoiceChannel({
-					channelId: newState.channelId,
-					guildId: newState.guild.id,
-					adapterCreator: newState.guild.voiceAdapterCreator,
-					selfDeaf: false
-				});
-				connection.receiver.speaking.on('start', (userId) => {
-					//actions here
-					console.log(userId)
-				})
-			}
+			const connection = initiateConnection(newState.channelId, newState.guild.id, newState.guild.voiceAdapterCreator)
 		}
 		else {
 			console.log('user moved channels', oldState.channelId, newState.channelId);
-			var connection = getVoiceConnection(newState.guild.id, newState.channelId);
-			if (connection == null) {
-				connection = joinVoiceChannel({
-					channelId: newState.channelId,
-					guildId: newState.guild.id,
-					adapterCreator: newState.guild.voiceAdapterCreator,
-					selfDeaf: false
-				});
-				connection.receiver.speaking.on('start', (userId) => {
-					//actions here
-					console.log(userId)
-				})
-			}
+			const connection = initiateConnection(newState.channelId, newState.guild.id, newState.guild.voiceAdapterCreator)
 		}
 	}
 });
