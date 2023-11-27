@@ -1,18 +1,23 @@
 # RicardoBot
 Discord bot for Ricardo Discord Server
 
+## Requirements
 Run
 
 ```
 npm install
 ```
 
-Dependencies will be installed from the above command. I'd suggest using Docker to get all the necessary requirements. Make a .env file, add DISCORD_TOKEN= the token. This should be private and not public. I will send the developers the token privately.
+Dependencies will be installed from the above command. I'd suggest using Docker to get all the necessary requirements. Make a .env file, add DISCORD_TOKEN= the token. This should be private and not public. Contact the developers to get the token privately.
 
-Run to test running bot
+Install ffmpeg on computer 
+
+[ffmpeg source](https://ffmpeg.org/)
+
+## Run to test running bot
 
 ```
-node index.js
+npm start
 ```
 
 ## Run with Docker
