@@ -114,16 +114,18 @@ module.exports = {
                 .then(res => res.json())
                 .then(async () => {
                     var player;
-                    if (typeof connection?.state.subscription.player !== "undefined") {
-                        connection.state.subscription.player.stop();
-                    }
                     player = createAudioPlayer();
 
                     console.log(url);
                     const source = await ytdl.stream(url);
                     const resource = createAudioResource(source.stream, { inputType: source.type });
 
-                    var connection = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator)
+                    var connectionArg = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator)
+                    const connection = connectionArg.connection
+
+                    if (typeof connection?.state.subscription?.player !== "undefined") {
+                        connection.state.subscription.player.stop();
+                    }
 
                     connection.subscribe(player);
                     player.play(resource);

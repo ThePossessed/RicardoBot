@@ -3,7 +3,6 @@ const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerSta
 const ytdl = require('play-dl');
 const fetch = require("node-fetch");
 const isUrl = require("is-url");
-const { initiateConnection } = require("../utils/HelperFunction/initiateConnection")
 require("dotenv").config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -25,7 +24,7 @@ module.exports = {
             await interaction.reply(`Ricardo bot is not connected to any channel. ${user}, the god of water, please let me in!`);
         }
         else if (queue.length === 0) {
-            if (connection.state.subscription.player == null) {
+            if (connection?.state.subscription?.player == null) {
                 let user = await client.users.fetch('345082365405560834');
                 await interaction.reply(`Ricardo bot doesn't play anything. ${user} please play me.`);
             }

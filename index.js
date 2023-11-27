@@ -15,7 +15,7 @@ const myIntents = new IntentsBitField();
 myIntents.add(IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildVoiceStates);
 
 // Create a new client instance
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, , myIntents] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, myIntents] });
 
 // Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN);
@@ -42,6 +42,7 @@ client.botID = '1082531882291445850';
 client.targetID = '345082365405560834';
 process.setMaxListeners(1)
 
+
 client.on('voiceStateUpdate', async (oldState, newState) => {
 	const actor = newState.member.id;
 
@@ -64,8 +65,9 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 		if (size === 1) {
 			try {
 				const connection = getVoiceConnection(guildId);
-
-				connection.destroy();
+				if (connection != null) {
+					connection.destroy();
+				}
 			} catch (error) {
 				console.log(error)
 			}

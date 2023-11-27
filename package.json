@@ -12,7 +12,7 @@
   "type": "commonjs",
   "dependencies": {
     "@discordjs/opus": "github:discordjs/opus",
-    "@discordjs/voice": "^0.16.0",
+    "@discordjs/voice": "^0.16.1",
     "@google-cloud/translate": "^8.0.2",
     "audio-buffer-from": "^1.1.1",
     "axios": "^1.6.0",

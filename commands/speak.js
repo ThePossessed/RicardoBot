@@ -16,22 +16,21 @@ module.exports = {
     async execute(interaction, args) {
         if (args.length == 0) {
             var base64data = "data:audio/mp3;base64," + process.env.TESTDATA;
-            if (typeof connection?.state.subscription.player !== "undefined") {
-                connection.state.subscription.player.stop();
-            }
             const player = createAudioPlayer();
 
             // console.log(url);
             const resource = createAudioResource(base64data);
 
-            var connection = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator)
+            var connectionArg = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator)
             // connection.state.subscription.player.stop();
             // connection.destroy();
+            if (typeof connectionArg.connection?.state.subscription?.player !== "undefined") {
+                connectionArg.connection?.state.subscription?.player.stop();
+            }
 
-            connection.subscribe(player);
+            connectionArg.connection.subscribe(player);
             player.play(resource);
 
-            await interaction.reply("Speaking");
         }
         else {
             const options = {
@@ -77,22 +76,21 @@ module.exports = {
                             } else {
                                 base64data = "data:audio/mp3;base64," + response.data.google.audio;
                             }
-                            if (typeof connection?.state.subscription.player !== "undefined") {
-                                connection.state.subscription.player.stop();
-                            }
                             const player = createAudioPlayer();
 
                             // console.log(url);
                             const resource = createAudioResource(base64data);
 
-                            var connection = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator)
+                            var connectionArg = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator)
                             // connection.state.subscription.player.stop();
                             // connection.destroy();
+                            if (typeof connectionArg.connection?.state.subscription?.player !== "undefined") {
+                                connectionArg.connection.state.subscription?.player.stop();
+                            }
 
-                            connection.subscribe(player);
+                            connectionArg.connection.subscribe(player);
                             player.play(resource);
 
-                            await interaction.reply("Speaking");
                         })
                         .catch((error) => {
                             console.error(error);
@@ -102,5 +100,6 @@ module.exports = {
                     console.error(error);
                 });
         }
+        await interaction.reply("Speaking");
     },
 };

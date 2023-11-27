@@ -1,7 +1,6 @@
 const { Client, SlashCommandBuilder, GatewayIntentBits } = require('discord.js');
 const { createAudioPlayer, createAudioResource, joinVoiceChannel } = require('@discordjs/voice');
 const fetch = require("node-fetch");
-const { initiateConnection } = require("../utils/HelperFunction/initiateConnection")
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -17,7 +16,9 @@ module.exports = {
         }
         else {
             try {
-                connection.state.subscription.player.stop();
+                if (typeof connection?.state.subscription?.player !== "undefined") {
+                    connection.state.subscription?.player.stop();
+                }
                 connection.destroy();
                 await interaction.reply("Leaving voice channel");
             } catch (error) {

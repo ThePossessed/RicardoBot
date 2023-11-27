@@ -3,6 +3,8 @@ const { createAudioPlayer, createAudioResource, joinVoiceChannel, EndBehaviorTyp
 const fs = require("fs")
 const prism = require("prism-media")
 const ffmpeg = require("fluent-ffmpeg")
+const util = require("util")
+const { exec, spawn } = require("child_process")
 
 function saveAsMP3(input, output, callback) {
     ffmpeg(input)
@@ -11,10 +13,11 @@ function saveAsMP3(input, output, callback) {
             console.log('conversion ended');
             callback(null);
         }).on('error', function (err) {
-            console.log('error: ', e.code, e.msg);
+            console.log('error: ', err.code, err.msg);
             callback(err);
         }).run();
 }
+
 function initiateConnection(channelId, guildId, adapterCreator) {
     const recording = false;
     var connection = getVoiceConnection(guildId, channelId);
@@ -26,58 +29,86 @@ function initiateConnection(channelId, guildId, adapterCreator) {
             selfDeaf: false
         });
         if (recording) {
-            const buffer = [];
-            const opusDecoder = new prism.opus.Decoder({
-                frameSize: 960,
-                channels: 2,
-                rate: 48000,
-            })
             const opusEncoder = new prism.opus.Encoder(
                 48000, 2
             )
 
-            connection.receiver.speaking.on('start', (userId) => {
-                if (connection.receiver.subscriptions.get(userId) == null) {
-                    const currentdate = new Date();
-                    const timestamp = "" + currentdate.getDate() + (currentdate.getMonth() + 1) + currentdate.getFullYear() + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds();
-                    const saveDir = `${__dirname}/../../voiceData/${userId}`
-                    const fileName = `${userId}_${timestamp}.pcm`
-                    const writeStream = fs.createWriteStream(saveDir + "/" + fileName)
-                    const audio = connection.receiver.subscribe(userId, {
+            const receiver = connection.receiver
+
+            receiver.speaking.on('start', async (userId) => {
+                var audio;
+                if (receiver.subscriptions.get(userId) == null) {
+                    audio = receiver.subscribe(userId, {
                         end: {
                             behavior: EndBehaviorType.AfterSilence,
-                            duration: 1000
-                        }
+                            duration: 100
+                        },
                     });
-                    console.log(`${userId} Speaking at ${currentdate}`)
-                    if (!fs.existsSync(saveDir)) {
-                        fs.mkdirSync(saveDir);
-                    }
-
-                    audio.pipe(opusDecoder).pipe(writeStream)
                     // TODO: only take large files
-                    // writeStream.on("close", () => {
+                    // writeStream.on("finish", () => {
                     //     const fileStats = fs.statSync(saveDir + "/" + fileName)
                     //     console.log(`file ${saveDir + "/" + fileName} size: ${fileStats.size}`)
                     // })
-                }
-                else {
-                    return
+                    const currentdate = new Date();
+                    const timestamp = "" + currentdate.getDate() + (currentdate.getMonth() + 1) + currentdate.getFullYear() + currentdate.getHours() + currentdate.getMinutes() + currentdate.getSeconds();
+                    const saveDir = `${__dirname}/../../voiceData/${userId}`
+                    if (!fs.existsSync(saveDir)) {
+                        fs.mkdirSync(saveDir);
+                    }
+                    const fileName = `${userId}_${timestamp}.pcm`
+                    const mp3Name = `${userId}_${timestamp}.mp3`
+                    const writeStream = fs.createWriteStream(saveDir + "/" + fileName)
+                    const opusDecoder = new prism.opus.Decoder({
+                        frameSize: 960,
+                        channels: 2,
+                        rate: 48000,
+                    })
+                    console.log(`${userId} Speaking at ${currentdate}`) // ${util.inspect(writeStream, { depth: null })}
+                    audio.pipe(opusDecoder).pipe(writeStream)
+                    writeStream.on("finish", () => {
+                        const fileStats = fs.statSync(saveDir + "/" + fileName)
+                        console.log(`file ${saveDir + "/" + fileName} size: ${fileStats.size}`)
+                        if (fileStats.size < 256000) {
+                            fs.unlink(saveDir + "/" + fileName, (err) => {
+                                if (err) {
+                                    throw err;
+                                }
+                                console.log("File deleted due to small size")
+                            })
+                        }
+                        else {
+                            // saveAsMP3(saveDir + "/" + fileName, saveDir + "/" + mp3Name, (arg) => { console.log(arg) })
+                            // exec(`ffmpeg -y -f s16le -ar 48k -ac 2 -i ${saveDir + " /" + fileName} ${saveDir + "/" + mp3Name}`)
+                            const cmd = "ffmpeg"
+                            const args = [
+                                '-y',
+                                '-f', 's16le',
+                                '-ar', '48k',
+                                '-ac', '2',
+                                '-i', `${saveDir + "/" + fileName}`,
+                                `${saveDir + "/" + mp3Name}`
+                            ]
+                            var proc = spawn(cmd, args)
+                            proc.on('close', function () {
+                                console.log('Successfully converted to MP3');
+                            });
+                        }
+                    })
                 }
             }
             )
-
-            // connection.receiver.speaking.on("data", (chunk) => {
-            //     buffer.push(opusEncoder.decode(chunk))
-            // })
-
-            // connection.receiver.speaking.on("end", (userId) => {
-            //     console.log(`${buffer}`)
-            //     console.log(`${userId} Data size ${buffer.length}`)
-            // })
+        }
+        return {
+            connection: connection,
+            mode: "New"
         }
     }
-    return connection
+    else {
+        return {
+            connection: connection,
+            mode: "Exist"
+        }
+    }
 }
 
 module.exports = { initiateConnection }
