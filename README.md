@@ -21,7 +21,7 @@ npm start
 ```
 
 ## Run with Docker
-I've just created a Dockerfile, which you can now build and run on Docker for better environment.
+Option to run using Docker is available.
 
 ```
 docker build -t ricardo-bot .
