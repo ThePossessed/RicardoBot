@@ -5,6 +5,7 @@ module.exports = {
 		.setName('echo')
 		.setDescription('Echo something to the screen'),
 	async execute(interaction) {
-		await interaction.reply(`Hello ${interaction.user.username}`);
+		await interaction.deferReply();
+		await interaction.editReply(`Hello ${interaction.user.username}`);
 	},
 };

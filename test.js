@@ -1,23 +1,15 @@
-require("dotenv").config();
-const axios = require("axios").default;
+const { default: axios } = require('axios');
+const cheerio = require('cheerio');
+const mimeType = require('mime-types');
+const util = require('util');
 
-const options = {
-    method: "POST",
-    url: "https://api.edenai.run/v2/translation/language_detection",
-    headers: {
-        authorization: `Bearer ${process.env.EDEN_AI_API_KEY}`
-    },
-    data: {
-        show_original_response: false,
-        fallback_providers: "",
-        providers: 'google',
-        text: 'Xin chào, tôi là Nam'
-    }
-}
+const url = 'https://dota2.fandom.com/wiki/Chat_Wheel/Dota_Plus'
+axios.get(url, { responseType: 'arraybuffer' }).then((response) => {
+    const $ = cheerio.load(response.data);
+    const listItems = $('audio').find('a').map((i, x) => $(x).attr('href'));
+    console.log(`List item count: `);
+    // const b64 = response.data.toString('base64');
+    // console.log(b64);
+})
 
-axios
-    .request(options)
-    .then((response) => { console.log(response.data.google.items[0].language) })
-    .catch((error) => {
-        console.error(error);
-    });
+console.log("Hello")

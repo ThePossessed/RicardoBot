@@ -37,6 +37,8 @@ module.exports = {
     async execute(interaction) {
         const coinflip = Math.random();
 
+        await interaction.deferReply();
+
         // if (coinflip < 0.1) {
         //     var randomfile = secret_image[Math.floor(Math.random() * secret_image.length)]
         //     let user = await client.users.fetch('345082365405560834');
@@ -60,7 +62,7 @@ module.exports = {
             .setImage(randomgif)
 
 
-        await interaction.reply({ content: `Your wish is my command. ${user} shall grant you his precious nude.`, embeds: [embedmsg] })
+        await interaction.editReply({ content: `Your wish is my command. ${user} shall grant you his precious nude.`, embeds: [embedmsg] })
         return;
         // }
 

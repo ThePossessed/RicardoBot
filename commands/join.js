@@ -11,14 +11,15 @@ module.exports = {
         .setDescription('join channel'),
     async execute(interaction) {
         const connection = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator);
+        await interaction.deferReply();
         interaction.member.voice.channel.members.each(member => {
             console.log(member.user.id)
         })
         if (connection.mode == "New") {
-            await interaction.reply("Joining voice channel");
+            await interaction.editReply("Joining voice channel");
         }
         else {
-            await interaction.reply("Already in the channel");
+            await interaction.editReply("Already in the channel");
         }
     },
 };

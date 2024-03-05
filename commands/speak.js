@@ -16,6 +16,8 @@ module.exports = {
     async execute(interaction, args) {
         if (args.length == 0) {
             var base64data = "data:audio/mp3;base64," + process.env.TESTDATA;
+
+            await interaction.deferReply();
             const player = createAudioPlayer();
 
             // console.log(url);
@@ -100,6 +102,6 @@ module.exports = {
                     console.error(error);
                 });
         }
-        await interaction.reply("Speaking");
+        await interaction.editReply("Speaking");
     },
 };

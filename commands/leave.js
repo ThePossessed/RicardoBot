@@ -10,9 +10,10 @@ module.exports = {
         const { getVoiceConnection } = require('@discordjs/voice');
 
         const connection = getVoiceConnection(interaction.guild.id);
+        await interaction.deferReply();
 
         if (connection == null) {
-            await interaction.reply("Not in voice channel");
+            await interaction.editReply("Not in voice channel");
         }
         else {
             try {
@@ -20,7 +21,7 @@ module.exports = {
                     connection.state.subscription?.player.stop();
                 }
                 connection.destroy();
-                await interaction.reply("Leaving voice channel");
+                await interaction.editReply("Leaving voice channel");
             } catch (error) {
                 console.log(error);
             }

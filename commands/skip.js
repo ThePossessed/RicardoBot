@@ -19,26 +19,28 @@ module.exports = {
 
         const connection = getVoiceConnection(interaction.guild.id);
 
+        await interaction.deferReply();
+
         if (connection == null) {
             let user = await client.users.fetch('345082365405560834');
-            await interaction.reply(`Ricardo bot is not connected to any channel. ${user}, the god of water, please let me in!`);
+            await interaction.editReply(`Ricardo bot is not connected to any channel. ${user}, the god of water, please let me in!`);
         }
         else if (queue.length === 0) {
             if (connection?.state.subscription?.player == null) {
                 let user = await client.users.fetch('345082365405560834');
-                await interaction.reply(`Ricardo bot doesn't play anything. ${user} please play me.`);
+                await interaction.editReply(`Ricardo bot doesn't play anything. ${user} please play me.`);
             }
             else {
                 try {
                     connection.state.subscription.player.stop();
 
                     let user = await client.users.fetch('345082365405560834');
-                    await interaction.reply(`Ricardo bot out of water. ${user} gives me more onegai.`);
+                    await interaction.editReply(`Ricardo bot out of water. ${user} gives me more onegai.`);
                 } catch (error) {
                     console.log(error);
 
                     let user = await client.users.fetch('345082365405560834');
-                    await interaction.reply(`Ricardo bot is not connected to any channel. ${user}, the god of water, please let me in!`);
+                    await interaction.editReply(`Ricardo bot is not connected to any channel. ${user}, the god of water, please let me in!`);
                 }
             }
         }
@@ -48,7 +50,7 @@ module.exports = {
             const resource = createAudioResource(source.stream, { inputType: source.type });
             connection.state.subscription.player.play(resource);
 
-            await interaction.reply(`Skip!! Now playing [${song[1]}](${song[0]})`);
+            await interaction.editReply(`Skip!! Now playing [${song[1]}](${song[0]})`);
         }
         return queue
     },

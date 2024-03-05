@@ -10,10 +10,11 @@ module.exports = {
         .setDescription('Ask Hai Nam to give out some water'),
     async execute(interaction) {
         let user = await client.users.fetch('345082365405560834');
+        await interaction.deferReply();
         if (user) {
-            await interaction.reply(`${interaction.user} is about to die due to lack of water. ${user} please share some`);
+            await interaction.editReply(`${interaction.user} is about to die due to lack of water. ${user} please share some`);
         } else {
-            await interaction.reply(`No water :(`)
+            await interaction.editReply(`No water :(`)
         }
     },
 };

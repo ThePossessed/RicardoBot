@@ -32,6 +32,7 @@ module.exports = {
         var is_playlist = false;
         var playlistID;
         var channelID = interaction.channelId;
+        await interaction.deferReply();
         for (var i = 0; i < argument_list.length; i++) {
             try {
                 const key_val = argument_list[i].split("=");
@@ -100,9 +101,9 @@ module.exports = {
         }
         if (curState !== "I") {
             if (is_playlist) {
-                interaction.reply(`Queued playlist with ${url.length} songs!`);
+                interaction.editReply(`Queued playlist with ${url.length} songs!`);
             } else {
-                interaction.reply(`Queued [${url[0][1]}](${url[0][0]})`);
+                interaction.editReply(`Queued [${url[0][1]}](${url[0][0]})`);
             }
         }
         else {
@@ -131,7 +132,7 @@ module.exports = {
                     player.play(resource);
 
                     // console.log('fetch', title);
-                    interaction.reply(`Playing [${title}](${url})`);
+                    interaction.editReply(`Playing [${title}](${url})`);
 
                     player.on("error", error => {
                         console.log(`Error: ${error.message} with resource ${error.resource.metadata.title}`)
