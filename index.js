@@ -3,6 +3,8 @@ console.log('Hello Ricardo!');
 require("dotenv").config();
 const fs = require('node:fs');
 const path = require('node:path');
+const { default: axios } = require('axios');
+const cheerio = require('cheerio');
 // Require the necessary discord.js classes
 const { Client, Collection, Events, GatewayIntentBits, IntentsBitField, ClientPresence, Presence } = require('discord.js');
 const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus, getVoiceConnection, EndBehaviorType } = require('@discordjs/voice');
@@ -31,17 +33,82 @@ for (const file of commandFiles) {
 	client.commands.set(command.data.name, command);
 }
 
-client.once(Events.ClientReady, c => {
-	console.log(`Ready! Logged in as ${c.user.tag} with id ${c.user.id}`);
-});
-
 client.queue = [];
 client.player = createAudioPlayer();
 client.connection = null;
-client.botID = '1082531882291445850';
+client.botID = process.env.CLIENT_ID;
 client.targetID = '345082365405560834';
+client.currentChannelID = '';
+client.currentGuildID = '';
+client.adapterCreator = '';
 process.setMaxListeners(1)
 
+function speakRandomDota2(voiceArray) {
+	var url = voiceArray[Math.floor(Math.random() * voiceArray.length)];
+	console.log(voiceArray.length);
+	var base64data;
+	try {
+		axios.get(url, { responseType: 'arraybuffer' }).then((response) => {
+			const targetFile = './audio.mp3';
+			base64data = "data:audio/mp3" + ";base64," + response.data.toString('base64');
+			const buffer = Buffer.from(
+				base64data.split('base64,')[1],  // only use encoded data after "base64,"
+				'base64'
+			)
+			fs.writeFileSync(targetFile, buffer);
+			const player = createAudioPlayer();
+			const resource = createAudioResource(targetFile);
+			console.log(url);
+			const guildId = client.currentGuildID;
+			const channelId = client.currentChannelID;
+			const adapterCreator = client.adapterCreator;
+			if (guildId != '' && channelId != '' && adapterCreator != '') {
+				var connection = getVoiceConnection(guildId, channelId);
+				if (connection == null) {
+					connection = joinVoiceChannel({
+						channelId: channelId,
+						guildId: guildId,
+						adapterCreator: adapterCreator,
+						selfDeaf: false
+					});
+				}
+				if (connection == null) {
+					console.log("Not in any channel");
+				} else {
+					if (!("subscription" in connection.state)) {
+						console.log("Initialize Speaking");
+						connection.subscribe(player);
+						player.play(resource);
+					}
+					else {
+						console.log(connection.state.subscription.player.state.status)
+						if ("player" in connection.state.subscription) {
+							if (client.queue.length == 0
+								&& connection.state.subscription.player.state.status == 'idle'
+								&& Math.random() < 0.05) {
+								console.log("Speaking");
+								connection.subscribe(player);
+								player.play(resource);
+							}
+						}
+					}
+				}
+			}
+		});
+	} catch (e) {
+		console.log(e);
+	}
+}
+
+client.once(Events.ClientReady, c => {
+	console.log(`Ready! Logged in as ${c.user.tag} with id ${c.user.id}`);
+	axios.get('https://dota2.fandom.com/wiki/Chat_Wheel/Dota_Plus').then((response) => {
+		const $ = cheerio.load(response.data);
+		const listItems = $('audio').find('a').map((i, x) => $(x).attr('href'));
+		console.log(`List item count: ${listItems.length}`);
+		setInterval(() => { speakRandomDota2(listItems) }, 7000);
+	})
+});
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
 	const actor = newState.member.id;
@@ -110,6 +177,9 @@ client.on(Events.InteractionCreate, async interaction => {
 		return;
 	}
 
+	client.currentChannelID = interaction.member.voice.channel.id;
+	client.currentGuildID = interaction.guild.id;
+	client.adapterCreator = interaction.guild.voiceAdapterCreator;
 	const command = client.commands.get(interaction.commandName);
 	// console.log(interaction.member.voice.channel.members.size);
 
