@@ -38,17 +38,20 @@ client.player = createAudioPlayer();
 client.connection = null;
 client.botID = process.env.CLIENT_ID;
 client.targetID = '345082365405560834';
+client.userLong = '303148517751259147';
 client.currentChannelID = '';
 client.currentGuildID = '';
 client.adapterCreator = '';
+client.allVoiceLine = {};
 process.setMaxListeners(1)
 
-function speakRandomDota2(voiceArray) {
+function speakRandomDota2(allVoiceLine, voiceArray, voiceArray2) {
 	var url = voiceArray[Math.floor(Math.random() * voiceArray.length)];
+
 	console.log(voiceArray.length);
 	var base64data;
 	try {
-		axios.get(url, { responseType: 'arraybuffer' }).then((response) => {
+		axios.get(url, { responseType: 'arraybuffer' }).then(async (response) => {
 			const targetFile = './audio.mp3';
 			base64data = "data:audio/mp3" + ";base64," + response.data.toString('base64');
 			const buffer = Buffer.from(
@@ -72,20 +75,39 @@ function speakRandomDota2(voiceArray) {
 						selfDeaf: false
 					});
 				}
+
+				try {
+					let guild = client.guilds.cache.get(guildId);
+					let voiceChannel = await guild.channels.fetch(channelId, { force: true })
+					let size = voiceChannel.members;
+					console.log(`all members: ${size.get(client.targetID)} ${size.get(client.userLong)} ${size.size}`);
+					if (size.get(client.userLong) !== undefined) {
+						console.log('Long is in voice');
+						url = voiceArray2[Math.floor(Math.random() * voiceArray2.length)];
+					} else {
+						console.log('Long is not in voice');
+					}
+				} catch (error) {
+					console.log(error)
+				}
+
+
 				if (connection == null) {
 					console.log("Not in any channel");
 				} else {
 					if (!("subscription" in connection.state)) {
-						console.log("Initialize Speaking");
-						connection.subscribe(player);
-						player.play(resource);
+						if (Math.random() < 0.01) {
+							console.log("Initialize Speaking");
+							connection.subscribe(player);
+							player.play(resource);
+						}
 					}
 					else {
 						console.log(connection.state.subscription.player.state.status)
 						if ("player" in connection.state.subscription) {
 							if (client.queue.length == 0
 								&& connection.state.subscription.player.state.status == 'idle'
-								&& Math.random() < 0.05) {
+								&& Math.random() < 0.01) {
 								console.log("Speaking");
 								connection.subscribe(player);
 								player.play(resource);
@@ -99,14 +121,21 @@ function speakRandomDota2(voiceArray) {
 		console.log(e);
 	}
 }
-
+// https://borderlands.fandom.com/wiki/Krieg/Quotes
 client.once(Events.ClientReady, c => {
 	console.log(`Ready! Logged in as ${c.user.tag} with id ${c.user.id}`);
 	axios.get('https://dota2.fandom.com/wiki/Chat_Wheel/Dota_Plus').then((response) => {
 		const $ = cheerio.load(response.data);
-		const listItems = $('audio').find('a').map((i, x) => $(x).attr('href'));
-		console.log(`List item count: ${listItems.length}`);
-		setInterval(() => { speakRandomDota2(listItems) }, 7000);
+		const listItems1 = $('audio').find('a').map((i, x) => $(x).attr('href'));
+		client.allVoiceLine = { ...client.allVoiceLine, ...listItems1 };
+		console.log(`List item count: ${listItems1.length}`);
+		axios.get('https://borderlands.fandom.com/wiki/Krieg/Quotes').then((response2) => {
+			const $ = cheerio.load(response2.data);
+			const listItems2 = $('ul').find('audio').map((i, x) => $(x).attr('src'));
+			client.allVoiceLine = { ...client.allVoiceLine, ...listItems2 };
+			console.log(`List item count: ${listItems2.length}`);
+			setInterval(() => { speakRandomDota2(client.allVoiceLine, listItems1, listItems2) }, 5000);
+		})
 	})
 });
 
