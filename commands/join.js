@@ -9,8 +9,8 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('join')
         .setDescription('join channel'),
-    async execute(interaction) {
-        const connection = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator);
+    async execute(interaction, client) {
+        const connection = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator, client);
         await interaction.deferReply();
         interaction.member.voice.channel.members.each(member => {
             console.log(member.user.id)

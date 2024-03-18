@@ -14,7 +14,7 @@ module.exports = {
         .setName('skip')
         .setDescription('skip a song')
     ,
-    async execute(interaction, queue) {
+    async execute(interaction, queue, client) {
         const { getVoiceConnection } = require('@discordjs/voice');
 
         const connection = getVoiceConnection(interaction.guild.id);
@@ -46,6 +46,9 @@ module.exports = {
         }
         else {
             const song = queue.shift();
+            if (client.isLoop) {
+                queue.push(song);
+            }
             const source = await ytdl.stream(song[0]);
             const resource = createAudioResource(source.stream, { inputType: source.type });
             connection.state.subscription.player.play(resource);

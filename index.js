@@ -10,6 +10,7 @@ const { Client, Collection, Events, GatewayIntentBits, IntentsBitField, ClientPr
 const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus, getVoiceConnection, EndBehaviorType } = require('@discordjs/voice');
 const prism = require("prism-media");
 const { initiateConnection } = require("./utils/HelperFunction/initiateConnection")
+const { destroyConnection } = require("./utils/HelperFunction/destroyConnection")
 
 require('events').EventEmitter.prototype._maxListeners = 100;
 
@@ -42,13 +43,16 @@ client.userLong = '303148517751259147';
 client.currentChannelID = '';
 client.currentGuildID = '';
 client.adapterCreator = '';
+client.activeUser = 0;
 client.allVoiceLine = {};
+client.isLoop = false;
+client.currentSong;
 process.setMaxListeners(1)
 
 function speakRandomDota2(allVoiceLine, voiceArray, voiceArray2) {
 	var url = voiceArray[Math.floor(Math.random() * voiceArray.length)];
 
-	console.log(voiceArray.length);
+	// console.log(voiceArray.length);
 	var base64data;
 	try {
 		axios.get(url, { responseType: 'arraybuffer' }).then(async (response) => {
@@ -61,26 +65,28 @@ function speakRandomDota2(allVoiceLine, voiceArray, voiceArray2) {
 			fs.writeFileSync(targetFile, buffer);
 			const player = createAudioPlayer();
 			const resource = createAudioResource(targetFile);
-			console.log(url);
+			// console.log(url);
 			const guildId = client.currentGuildID;
 			const channelId = client.currentChannelID;
 			const adapterCreator = client.adapterCreator;
 			if (guildId != '' && channelId != '' && adapterCreator != '') {
-				var connection = getVoiceConnection(guildId, channelId);
-				if (connection == null) {
-					connection = joinVoiceChannel({
-						channelId: channelId,
-						guildId: guildId,
-						adapterCreator: adapterCreator,
-						selfDeaf: false
-					});
-				}
+				// var connection = getVoiceConnection(guildId, channelId);
+				// if (connection == null) {
+				// 	connection = joinVoiceChannel({
+				// 		channelId: channelId,
+				// 		guildId: guildId,
+				// 		adapterCreator: adapterCreator,
+				// 		selfDeaf: false
+				// 	});
+				// }
+				var connectionObject = initiateConnection(channelId, guildId, adapterCreator, client);
+				var connection = connectionObject.connection;
 
 				try {
 					let guild = client.guilds.cache.get(guildId);
 					let voiceChannel = await guild.channels.fetch(channelId, { force: true })
 					let size = voiceChannel.members;
-					console.log(`all members: ${size.get(client.targetID)} ${size.get(client.userLong)} ${size.size}`);
+					// console.log(`all members: ${size.get(client.targetID)} ${size.get(client.userLong)} ${size.size}`);
 					if (size.get(client.userLong) !== undefined) {
 						console.log('Long is in voice');
 						url = voiceArray2[Math.floor(Math.random() * voiceArray2.length)];
@@ -156,13 +162,14 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 			console.log(error)
 		}
 
+		client.activeUser = size;
 		console.log("member in voice", size)
 
 		if (size === 1) {
 			try {
 				const connection = getVoiceConnection(guildId);
 				if (connection != null) {
-					connection.destroy();
+					destroyConnection(client, connection)
 				}
 			} catch (error) {
 				console.log(error)
@@ -188,11 +195,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 		}
 		else if (oldState.channelId === null) {
 			console.log('user joined channel', newState.channelId);
-			const connection = initiateConnection(newState.channelId, newState.guild.id, newState.guild.voiceAdapterCreator)
+			const connection = initiateConnection(newState.channelId, newState.guild.id, newState.guild.voiceAdapterCreator, client)
 		}
 		else {
 			console.log('user moved channels', oldState.channelId, newState.channelId);
-			const connection = initiateConnection(newState.channelId, newState.guild.id, newState.guild.voiceAdapterCreator)
+			const connection = initiateConnection(newState.channelId, newState.guild.id, newState.guild.voiceAdapterCreator, client)
 		}
 	}
 });
@@ -206,9 +213,6 @@ client.on(Events.InteractionCreate, async interaction => {
 		return;
 	}
 
-	client.currentChannelID = interaction.member.voice.channel.id;
-	client.currentGuildID = interaction.guild.id;
-	client.adapterCreator = interaction.guild.voiceAdapterCreator;
 	const command = client.commands.get(interaction.commandName);
 	// console.log(interaction.member.voice.channel.members.size);
 
@@ -229,12 +233,15 @@ client.on(Events.InteractionCreate, async interaction => {
 
 	try {
 		if (interaction.commandName === "play") {
-			client.queue = await command.execute(interaction, args, client.queue);
-		} else if (interaction.commandName === "skip") {
-			client.queue = await command.execute(interaction, client.queue);
+			client.queue = await command.execute(interaction, args, client.queue, client);
+		} else if (interaction.commandName === "skip" || interaction.commandName === "listsong") {
+			client.queue = await command.execute(interaction, client.queue, client);
 		} else if (interaction.commandName === "speak") {
-			await command.execute(interaction, args)
-			client.queue = []
+			await command.execute(interaction, args, client)
+			client.queue = [];
+			client.currentSong = [];
+		} else if (interaction.commandName === "leave" || interaction.commandName === "loop" || interaction.commandName === "join") {
+			await command.execute(interaction, client)
 		}
 		else {
 			await command.execute(interaction);

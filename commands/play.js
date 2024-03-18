@@ -21,7 +21,7 @@ module.exports = {
                 .setDescription('song URL or song name')
                 .setRequired(false)
         ),
-    async execute(interaction, args, queue) {
+    async execute(interaction, args, queue, client) {
         // console.log("Channel: ", interaction["channelId"]);
 
         var url = args;
@@ -32,6 +32,7 @@ module.exports = {
         var is_playlist = false;
         var playlistID;
         var channelID = interaction.channelId;
+        var isError = false;
         await interaction.deferReply();
         for (var i = 0; i < argument_list.length; i++) {
             try {
@@ -72,14 +73,11 @@ module.exports = {
                 }).then(() => {
                     url = [[`https://www.youtube.com/watch?v=${videoID}`, title]];
                 }).catch((error) => {
-                    curState = "I";
+                    isError = true
                     console.log(error);
                 })
         } else if (!songName) {
-            queue.shift();
-            if (queue.length === 0) {
-                curState = "I";
-            }
+            interaction.editReply(`Why do you queue without song name? Onii-chan baka`);
             return queue;
         } else {
             const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${songName}&key=${process.env.API_KEY}`;
@@ -92,10 +90,15 @@ module.exports = {
                 }).then(() => {
                     url = [[`https://www.youtube.com/watch?v=${videoID}`, title]];
                 }).catch((error) => {
-                    curState = "I";
+                    isError = true
                     console.log(error);
                 })
         }
+
+        if (isError) {
+            return queue;
+        }
+
         for (var i = 0; i < url.length; i++) {
             queue.push(url[i]);
         }
@@ -109,6 +112,10 @@ module.exports = {
         else {
             curState = "B";
             url = queue.shift();
+            if (client.isLoop) {
+                queue.push(url);
+            }
+            client.currentSong = url;
             title = url[1];
             url = url[0];
             fetch(`https://noembed.com/embed?dataType=json&url=${url}`)
@@ -121,7 +128,7 @@ module.exports = {
                     const source = await ytdl.stream(url);
                     const resource = createAudioResource(source.stream, { inputType: source.type });
 
-                    var connectionArg = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator)
+                    var connectionArg = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator, client)
                     const connection = connectionArg.connection
 
                     if (typeof connection?.state.subscription?.player !== "undefined") {
@@ -148,6 +155,10 @@ module.exports = {
                         console.log("Idle player: ", queue)
                         if (queue.length !== 0) {
                             const song = queue.shift();
+                            if (client.isLoop) {
+                                queue.push(song);
+                            }
+                            client.currentSong = song;
                             const source = await ytdl.stream(song[0]);
                             const resource = createAudioResource(source.stream, { inputType: source.type });
                             player.play(resource);
@@ -159,6 +170,7 @@ module.exports = {
                             // client.channels.cache.get(channelID).send({ content: `Playing `, embeds: [embedmsg] });
                         } else {
                             player.stop(); //connection.state.subscription.player.stop();
+                            curState = "I";
                         }
                     })
 

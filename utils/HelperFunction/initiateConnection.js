@@ -18,7 +18,7 @@ function saveAsMP3(input, output, callback) {
         }).run();
 }
 
-function initiateConnection(channelId, guildId, adapterCreator) {
+function initiateConnection(channelId, guildId, adapterCreator, client) {
     const recording = false;
     var connection = getVoiceConnection(guildId, channelId);
     if (connection == null) {
@@ -98,12 +98,18 @@ function initiateConnection(channelId, guildId, adapterCreator) {
             }
             )
         }
+        client.currentChannelID = channelId
+        client.currentGuildID = guildId
+        client.adapterCreator = adapterCreator
         return {
             connection: connection,
             mode: "New"
         }
     }
     else {
+        client.currentChannelID = channelId
+        client.currentGuildID = guildId
+        client.adapterCreator = adapterCreator
         return {
             connection: connection,
             mode: "Exist"

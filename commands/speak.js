@@ -23,7 +23,7 @@ module.exports = {
             // console.log(url);
             const resource = createAudioResource(base64data);
 
-            var connectionArg = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator)
+            var connectionArg = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator, client)
             // connection.state.subscription.player.stop();
             // connection.destroy();
             if (typeof connectionArg.connection?.state.subscription?.player !== "undefined") {
@@ -83,7 +83,7 @@ module.exports = {
                             // console.log(url);
                             const resource = createAudioResource(base64data);
 
-                            var connectionArg = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator)
+                            var connectionArg = initiateConnection(interaction.member.voice.channel.id, interaction.guild.id, interaction.guild.voiceAdapterCreator, client)
                             // connection.state.subscription.player.stop();
                             // connection.destroy();
                             if (typeof connectionArg.connection?.state.subscription?.player !== "undefined") {
