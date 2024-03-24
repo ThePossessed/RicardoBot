@@ -208,7 +208,7 @@ client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
 
 	if (!interaction.member.voice.channel) {
-		let user = await client.users.fetch('345082365405560834');
+		let user = await client.users.fetch('725482212392173588');
 		await interaction.reply(`Thou must be in a voice channel to command me. The god of water ${user} forbids this.`);
 		return;
 	}

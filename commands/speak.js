@@ -13,7 +13,7 @@ module.exports = {
                 .setDescription('Text to speak')
                 .setRequired(false)
         ),
-    async execute(interaction, args) {
+    async execute(interaction, args, client) {
         if (args.length == 0) {
             var base64data = "data:audio/mp3;base64," + process.env.TESTDATA;
 

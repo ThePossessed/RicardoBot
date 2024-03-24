@@ -14,7 +14,12 @@ module.exports = {
         // const exampleEmbed = new EmbedBuilder()
 
         try {
-            if (connection.state.subscription.player.state.status === 'idle' && client.queue.length === 0) {
+            var connection = getVoiceConnection(interaction.guild.id, interaction.member.voice.channel.id);
+            if (connection == null) {
+                await interaction.deferReply();
+                await interaction.editReply(`Not in a channel`);
+            }
+            else if (connection.state.subscription.player.state.status === 'idle' && client.queue.length === 0) {
                 await interaction.deferReply();
                 await interaction.editReply(`The queue is empty... Baka...`);
             }
