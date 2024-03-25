@@ -30,3 +30,6 @@ docker run --rm -it ricardo-bot
 
 ## Resources for Devs:
 [DiscordJs Documentation](https://discordjs.guide/#before-you-begin)
+
+## Notes:
+TODO: Update to receive separate voice line and still play songs correctly

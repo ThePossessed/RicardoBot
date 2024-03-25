@@ -21,19 +21,22 @@ module.exports = {
                 .setDescription('song URL or song name')
                 .setRequired(false)
         ),
-    async execute(interaction, args, queue, client) {
+    async execute(interaction, args, queue, client, mode) {
         // console.log("Channel: ", interaction["channelId"]);
 
         var url = args;
         var title;
-        const songName = interaction.options.getString('query');
+        const songName = url; //interaction.options.getString('query');
         const validURL = isUrl(songName);
         const argument_list = url.split("&");
+        console.log(url, songName);
         var is_playlist = false;
         var playlistID;
         var channelID = interaction.channelId;
         var isError = false;
-        await interaction.deferReply();
+        if (mode == "command") {
+            await interaction.deferReply();
+        }
         for (var i = 0; i < argument_list.length; i++) {
             try {
                 const key_val = argument_list[i].split("=");
@@ -77,7 +80,9 @@ module.exports = {
                     console.log(error);
                 })
         } else if (!songName) {
-            interaction.editReply(`Why do you queue without song name? Onii-chan baka`);
+            if (mode == "command") {
+                interaction.editReply(`Why do you queue without song name? Onii-chan baka`);
+            }
             return queue;
         } else {
             const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${songName}&key=${process.env.API_KEY}`;
@@ -103,10 +108,12 @@ module.exports = {
             queue.push(url[i]);
         }
         if (curState !== "I") {
-            if (is_playlist) {
-                interaction.editReply(`Queued playlist with ${url.length} songs!`);
-            } else {
-                interaction.editReply(`Queued [${url[0][1]}](${url[0][0]})`);
+            if (mode == "command") {
+                if (is_playlist) {
+                    interaction.editReply(`Queued playlist with ${url.length} songs!`);
+                } else {
+                    interaction.editReply(`Queued [${url[0][1]}](${url[0][0]})`);
+                }
             }
         }
         else {
@@ -139,8 +146,9 @@ module.exports = {
                     player.play(resource);
 
                     // console.log('fetch', title);
-                    interaction.editReply(`Playing [${title}](${url})`);
-
+                    if (mode == "command") {
+                        interaction.editReply(`Playing [${title}](${url})`);
+                    }
                     player.on("error", error => {
                         console.log(`Error: ${error.message} with resource ${error.resource.metadata.title}`)
                     });

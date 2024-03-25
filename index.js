@@ -18,7 +18,7 @@ const myIntents = new IntentsBitField();
 myIntents.add(IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildVoiceStates);
 
 // Create a new client instance
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, myIntents] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, myIntents] });
 
 // Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN);
@@ -45,6 +45,7 @@ client.currentGuildID = '';
 client.adapterCreator = '';
 client.activeUser = 0;
 client.allVoiceLine = {};
+client.userVoice = {};
 client.isLoop = false;
 client.currentSong;
 process.setMaxListeners(1)
@@ -91,7 +92,7 @@ function speakRandomDota2(allVoiceLine, voiceArray, voiceArray2) {
 						console.log('Long is in voice');
 						url = voiceArray2[Math.floor(Math.random() * voiceArray2.length)];
 					} else {
-						console.log('Long is not in voice');
+						// console.log('Long is not in voice');
 					}
 				} catch (error) {
 					console.log(error)
@@ -204,6 +205,16 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 	}
 });
 
+client.on(Events.MessageCreate, async interaction => {
+	console.log(interaction.content);
+	console.log(interaction.author.id);
+	console.log(interaction.content.slice(0, 12))
+	if (interaction.content.slice(0, 12) == "RidoBot Play" && interaction.author.id == "862159370698620959") {
+		const command = client.commands.get("play");
+		client.queue = await command.execute(interaction, interaction.content.slice(13).trim(), client.queue, client, "voice");
+	}
+})
+
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
 
@@ -233,7 +244,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 	try {
 		if (interaction.commandName === "play") {
-			client.queue = await command.execute(interaction, args, client.queue, client);
+			client.queue = await command.execute(interaction, args, client.queue, client, "command");
 		} else if (interaction.commandName === "skip" || interaction.commandName === "listsong") {
 			client.queue = await command.execute(interaction, client.queue, client);
 		} else if (interaction.commandName === "speak") {

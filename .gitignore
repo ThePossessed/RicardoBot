@@ -5,3 +5,5 @@ config.json
 voiceData/*
 venv
 voiceData
+test*.js
+assets/audioTesting

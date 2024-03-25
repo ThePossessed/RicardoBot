@@ -5,6 +5,9 @@ const prism = require("prism-media")
 const ffmpeg = require("fluent-ffmpeg")
 const util = require("util")
 const { exec, spawn } = require("child_process")
+const { HfInference } = require("@huggingface/inference");
+
+require("dotenv").config();
 
 function saveAsMP3(input, output, callback) {
     ffmpeg(input)
@@ -18,8 +21,33 @@ function saveAsMP3(input, output, callback) {
         }).run();
 }
 
+function max(a, b) {
+    return (a > b) ? a : b;
+}
+
+function lcs(x, y, m, n) {
+    if (m == 0 || n == 0) {
+        return 0
+    } else if (X[m - 1] == Y[n - 1]) {
+        return 1 + lcs(x, y, m - 1, n - 1)
+    } else {
+        return max(lcs(x, y, m - 1, n), lcs(x, y, m, n - 1))
+    }
+}
+
+function check_play_command(s) {
+    const upper_s = s.toUpperCase();
+    for (var i = 0; i < upper_s.length - 7; i++) {
+        if (upper_s.slice(i, i + 4) == "PLAY") {
+            return i + 4;
+        }
+    }
+    return -1;
+}
+
 function initiateConnection(channelId, guildId, adapterCreator, client) {
-    const recording = false;
+    const HF_TOKEN = process.env.HFTOKEN;
+    const recording = true;
     var connection = getVoiceConnection(guildId, channelId);
     if (connection == null) {
         connection = joinVoiceChannel({
@@ -89,8 +117,32 @@ function initiateConnection(channelId, guildId, adapterCreator, client) {
                                 `${saveDir + "/" + mp3Name}`
                             ]
                             var proc = spawn(cmd, args)
-                            proc.on('close', function () {
+                            proc.on('close', async function () {
                                 console.log('Successfully converted to MP3');
+
+                                const inference = new HfInference(HF_TOKEN)
+
+                                const result = await inference.automaticSpeechRecognition({
+                                    model: 'openai/whisper-large-v3',
+                                    data: fs.readFileSync(saveDir + "/" + mp3Name)
+                                })
+
+                                if (userId.toString() in client.userVoice) {
+                                    client.userVoice[userId.toString()] += " " + result["text"];
+                                } else {
+                                    client.userVoice[userId.toString()] = result["text"];
+                                }
+
+                                console.log(client.userVoice[userId.toString()])
+                                const song_name = check_play_command(client.userVoice[userId.toString()])
+                                console.log(song_name)
+                                if (song_name != -1) {
+                                    // Queue song or play song
+                                    const channel_to_reply = client.channels.cache.get(channelId);
+                                    channel_to_reply.send("RidoBot Play " + client.userVoice[userId.toString()].slice(song_name).trim());
+
+                                    client.userVoice[userId.toString()] = "";
+                                }
                             });
                         }
                     })
