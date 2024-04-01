@@ -1,4 +1,5 @@
 const { Client, SlashCommandBuilder, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const { initiateConnection } = require("../utils/HelperFunction/initiateConnection");
 require("dotenv").config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
