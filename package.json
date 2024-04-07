@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node deploy-commands.js && node --trace-warnings index.js"
+    "start": "python test.py && node deploy-commands.js && node --trace-warnings index.js"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +17,7 @@
     "@huggingface/agents": "^0.0.5",
     "@huggingface/hub": "^0.14.3",
     "@huggingface/inference": "^2.6.6",
+    "@xenova/transformers": "^2.16.1",
     "audio-buffer-from": "^1.1.1",
     "axios": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",
